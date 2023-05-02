@@ -1,0 +1,28 @@
+Its open source tool to evaluate OpenSearch, download and follow the instructions & prerequisites from actual open source  
+
+Git Repo: https://github.com/opensearch-project/opensearch-benchmark
+Detailed up-to date instructions or developer guide for setup the Benchmark tool https://github.com/opensearch-project/OpenSearch-Benchmark/blob/main/DEVELOPER_GUIDE.md
+Aforesaid steps completed successfully and prerequisites GIT, Python, JDK, & Docker(if required/preferred) are ready as per instructions, do following steps to evaluates your OpenSearch:
+
+Goto your folder/directory where source code get downloaded (ex: cd OpenSearch-Benchmark)
+Activate the virtual environment on your Mac/Machine → source .venv/bin/activate 
+Anytime help & explore use help accordingly → opensearch-benchmark -h
+To see list of available workloads/datasets→ opensearch-benchmark list workloads
+From here, we can run the Benchmark on different ways - few key ways are:
+To evaluate different versions[x.y vs x*.y+] of OpenSearch on local virtual environment with existing available workloads; few examples below:
+opensearch-benchmark execute_test --distribution-version=<X.Y.Z> --workload=<ABCDEF> --test-mode → here what is test mode: its sample & quick mode with evaluation of 1k records/documents from full dataset instead of not to evaluate whole dataset, and without (--test-mode option) it considers full dataset; example: opensearch-benchmark execute_test --distribution-version=2.2.1 --workload=geonames --test-mode
+
+For full dataset, with NO test mode, and if want to be run in any desired version ex: opensearch-benchmark execute_test --distribution-version=2.5.0 --workload=nyc_taxis
+To evaluate with custom workloads on existing cluster [PULL approach: pulling data from existing cluster index and evaluate locally with different OpenSearch versions], it helps to evaluates existing indices for upgrading Opensearch version.
+First create the custom workload: opensearch-benchmark create-workload --workload=<CUSTOM WORK LOAD NAME>  --indices=< INDICES> --target-hosts=<"http://id:password@TRAGET HOST(S):PORT#"> Example1: opensearch-benchmark create-workload --workload=sjtestlogs --indices=dashboards_sample_data_logs --target-hosts="http://icopensearch:contactme@load-balancer.52a2f274f4c641f18ab064f9fd8b8914.cnodes.io:9200"   and Example2: opensearch-benchmark create-workload --workload=sjtesttaxi —indices=green_taxi,yellow_taxi ---target-hosts="http://icopensearch:contactme@load-balancer.52a2f274f4c641f18ab064f9fd8b8914.cnodes.io:9200"
+And execute it, example: opensearch-benchmark execute_test --distribution-version=2.5.0 --workload-path=/Users/subbuj/git/opensearch-benchmark/workloads/sjtesttaxi
+To evaluate with existing available workloads on existing cluster [PUSH approach: downloading datasets from internet on fly and ingest/index and evaluate], its realtime cluster evaluation, how the cluster look like in-terms performance.
+opensearch-benchmark execute_test --workload nyc_taxis --pipeline benchmark-only --target-hosts "https://abc:xyz@os-baremetal-lb-26bb044a90d0e18a.elb.us-west-2.amazonaws.com:9200" → straight one
+
+opensearch-benchmark execute_test --workload nyc_taxis --pipeline benchmark-only --target-hosts "https://abc:xyz@os-baremetal-lb-26bb044a90d0e18a.elb.us-west-2.amazonaws.com:9200" --workload-params="bulk_indexing_clients:10,bulk_size:70000" --client-options="verify_certs:false,timeout:600" --kill-running-processes  → with few parameters to control bulk load for full size.
+
+ opensearch-benchmark execute_test --workload nyc_taxis --pipeline benchmark-only --target-hosts "https://abc:xyz@os-baremetal-lb-26bb044a90d0e18a.elb.us-west-2.amazonaws.com:9200"  --workload-params="bulk_indexing_clients:10,ingest_percentage:20,bulk_size:200000" --client-options="verify_certs:false,timeout:600" --kill-running-processes → with few parameters to control bulk load for partial size.
+opensearch-benchmark execute_test --workload nyc_taxis --pipeline benchmark-only --target-hosts "https://abc:xyz123@load-balancer.d326d48a1fca454d98fe2af0c18db4ee.cnodes.io:9200" --workload-params="bulk_indexing_clients:10,bulk_size:50000,number_of_replicas:2,number_of_shards:5" --client-options="verify_certs:false,timeout:600" --kill-running-processes →with specific primary & replica shards.
+
+opensearch-benchmark execute_test --workload nyc_taxis --pipeline benchmark-only --target-hosts "https://admin:admin@os-baremetal-lb-26bb044a90d0e18a.elb.us-west-2.amazonaws.com:9200" --workload-params="bulk_indexing_clients:10,bulk_size:50000,number_of_replicas:2,number_of_shards:5" --client-options="verify_certs:false,timeout:600,warmup_iterations:3" --kill-running-processes  →with warmup option not to burst.
+All aforesaid parameter numbers are vary based on your use-cases, configurations and/or environment capacity.  
